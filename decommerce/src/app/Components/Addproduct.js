@@ -9,6 +9,14 @@ const AddProduct = () => {
     description: '',
   });
 
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setPaintingData((prevData) => ({
+      ...prevData,
+      [name]: value,
+    }));
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
   
@@ -36,11 +44,11 @@ const AddProduct = () => {
   return (
     <div className="flex justify-center items-center min-h-screen bg-gray-100">
       <div className="bg-white p-8 rounded-lg shadow-lg w-96">
-        <h2 className="text-2xl font-bold text-center text-gray-800 mb-6">Add New Painting</h2>
+        <h2 className="text-2xl font-bold text-center text-gray-800 mb-6">Sell Your Art</h2>
         
         <form onSubmit={handleSubmit}>
           <div className="mb-4">
-            <label htmlFor="title" className="block text-sm font-medium text-gray-700">Painting Title</label>
+            <label htmlFor="title" className="block text-sm font-medium text-gray-700">Art Title</label>
             <input
               type="text"
               id="title"
@@ -66,7 +74,7 @@ const AddProduct = () => {
           </div>
 
           <div className="mb-4">
-            <label htmlFor="price" className="block text-sm font-medium text-gray-700">Price (ETH)</label>
+            <label htmlFor="price" className="block text-sm font-medium text-gray-700">Price (AC)</label>
             <input
               type="number"
               id="price"
@@ -79,7 +87,7 @@ const AddProduct = () => {
           </div>
 
           <div className="mb-4">
-            <label htmlFor="image" className="block text-sm font-medium text-gray-700">Image URL</label>
+            <label htmlFor="image" className="block text-sm font-medium text-gray-700">Image </label>
             <input
               type="url"
               id="image"
@@ -109,7 +117,7 @@ const AddProduct = () => {
               type="submit"
               className="w-full mt-4 p-3 bg-indigo-600 text-white font-bold rounded-lg shadow-lg hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500"
             >
-              Add Painting to Blockchain
+              Add Art for Selling
             </button>
           </div>
         </form>

@@ -21,10 +21,8 @@ function runMiddleware(req, res, fn) {
 }
 
 export default async function handler(req, res) {
-    // ✅ Run CORS middleware before handling requests
     await runMiddleware(req, res, cors);
 
-    // ✅ Connect to MongoDB
     await connectToDatabase();
 
     if (req.method === "POST") {

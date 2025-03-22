@@ -1,16 +1,13 @@
-'use client';
-
+"use client";
 import React, { useState, useEffect } from "react";
-import Profile from "../images/profile.png";
 import Image from "next/image";
+import Profile from "../images/profile.png";
 import { CgMenuGridO } from "react-icons/cg";
 import { IoMdSearch } from "react-icons/io";
 import { FaCoins } from "react-icons/fa";
 import Modal from "react-modal";
-import ACToken from '../assets/ACToken.json'
-import Address from '../assets/Address.json'
-import { ethers } from 'ethers';
-import { Web3Provider } from '@ethersproject/providers';
+import { getProviderAndContract } from "../Components/Blockchain.js";
+import { ethers } from "ethers";
 
 const customStyles = {
   content: {
@@ -26,46 +23,61 @@ const customStyles = {
 };
 
 const Header = () => {
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [appElement, setAppElement] = useState(null);
-  // Token buying
-  const [tokenAmount, setTokenAmount] = useState(0);
-  const [totalDue, setTotalDue] = useState(0);
+  const [balance, setBalance] = useState("0");
   const [transactionSuccess, setTransactionSuccess] = useState(false);
   const [transactionHash, setTransactionHash] = useState("");
-  const [balance, setBalance] = useState("0 AC");
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [tokenAmount, setTokenAmount] = useState(0);
+  const [totalDue, setTotalDue] = useState(0);
 
-  const buyToken = async () => {
-    try {
-        const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
-        const account = accounts[0];
-
-        const provider = new ethers.BrowserProvider(window.ethereum);
-        const signer = await provider.getSigner();
-
-        const contract = new ethers.Contract(Address["TokenModule#ACToken"], ACToken.abi, signer);
-        const value = ethers.parseEther(totalDue.toString());
-
-        const tx = await contract.purchaseTokens({ value });
-        console.log("Transaction sent:", tx);
-
-        const receipt = await tx.wait(1); // Ensure at least 1 confirmation
-        console.log("Transaction receipt:", receipt);
-
-        setTransactionSuccess(true);
-        setTransactionHash(tx.hash);
-        setBalance(`${tokenAmount} AC`);
-    } catch (error) {
-        console.error("Transaction error:", error);
-    }
-};
-
-  
   useEffect(() => {
+    fetchBalance();
     Modal.setAppElement(document.getElementById("__next"));
   }, []);
 
-  const openModal = () => setIsModalOpen(true);
+  const fetchBalance = async () => {
+    try {
+      const { account, contract } = await getProviderAndContract();
+      if (!account || !contract) return;
+
+      const balanceBigNumber = await contract.balanceOf(account);
+
+      const balance = balanceBigNumber.toString(); 
+      setBalance(balance);
+    } catch (error) {
+      console.error("Error fetching balance:", error);
+    }
+  };
+
+  const buyToken = async () => {
+    try {
+      const { account, contract } = await getProviderAndContract();
+      if (!account || !contract) return;
+
+      const value = ethers.parseEther(totalDue.toString());
+
+      const tx = await contract.purchaseTokens({ value });
+      console.log("Transaction sent:", tx);
+
+      await tx.wait(); // Wait for confirmation
+      console.log("Transaction successful:", tx.hash);
+      alert("Token Minted Successfully");
+
+      setTransactionSuccess(true);
+      setTransactionHash(tx.hash);
+      fetchBalance(); // Update balance after transaction
+    } catch (error) {
+      console.error("Transaction error:", error);
+      alert(`Transaction failed: ${error.message}`);
+    }
+  };
+
+  const openModal = () => {
+    setIsModalOpen(true);
+    setTokenAmount(0);
+    setTotalDue(0);
+  };
+
   const closeModal = () => setIsModalOpen(false);
 
   const handleInputChange = (e) => {
@@ -95,57 +107,40 @@ const Header = () => {
         <div className="text-gray-700 font-semibold cursor-pointer hover:text-blue-500 transition">New Releases</div>
         <div className="text-gray-700 font-semibold cursor-pointer hover:text-blue-500 transition">Featured</div>
 
-        <div
-          className="flex items-center bg-blue-500 text-white px-4 py-2 rounded-full cursor-pointer hover:bg-blue-600 transition"
-          onClick={openModal}
-        >
-          {balance}
+        <div className="flex items-center bg-blue-500 text-white px-4 py-2 rounded-full cursor-pointer hover:bg-blue-600 transition" onClick={openModal}>
+          {balance !== null ? `${balance} AC` : "Fetching..."}
           <FaCoins fontSize={20} className="ml-2" />
         </div>
 
         <CgMenuGridO fontSize={30} className="text-gray-700 cursor-pointer hover:text-blue-500 transition" />
       </div>
 
-      <Modal
-      
-        isOpen={isModalOpen}
-        onRequestClose={closeModal}
-        style={customStyles}
-        ariaHideApp={false}
-      >
+      <Modal isOpen={isModalOpen} onRequestClose={closeModal} style={customStyles} ariaHideApp={false}>
         <h2 className="text-lg font-bold mb-4">Buy AC Token</h2>
         <p className="text-gray-700 mb-4">How many tokens would you like to buy?</p>
-        <input
-                   type="number"
-                   className="w-full p-2 pl-10 text-sm text-gray-700"
-                   placeholder="Enter amount"
-                   value={tokenAmount}
-                   onChange={handleInputChange}
-                 />
-                 <p className="text-gray-700 mt-4">Total due: {totalDue} ETH</p>
-                 <button
-                   className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded"
-                   onClick={buyToken}
-                 >
-                   Buy
-                 </button>
-                 {transactionSuccess && (
-           <div className="bg-green-100 border-l-4 border-green-500 text-green-700 p-4 mt-4">
-             <p>Transaction successful!</p>
-             <p>Transaction hash: {transactionHash}</p>
-             <a
-               href={`https://etherscan.io/tx/${transactionHash}`}
-               target="_blank"
-               rel="noopener noreferrer"
-               className="text-blue-500 hover:text-blue-600"
-             >
-               View on Etherscan
-             </a>
-           </div>
-         )}
-         </Modal>
-         </div>
-         );
-         };
-         
-         export default Header;
+        <input type="number" className="w-full p-2 pl-10 text-sm text-gray-700" placeholder="Enter amount"
+          value={tokenAmount || ""} onChange={handleInputChange} />
+
+        <p className="text-gray-700 mt-4">Total due: {totalDue} ETH</p>
+
+        {!transactionSuccess ? (
+          <button className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded"
+            onClick={buyToken}>
+            Buy
+          </button>
+        ) : (
+          <div className="bg-green-100 border-l-4 border-green-500 text-green-700 p-4 mt-4">
+            <p>Transaction successful!</p>
+            <p>Transaction hash: {transactionHash}</p>
+            <a href={`https://etherscan.io/tx/${transactionHash}`} target="_blank" rel="noopener noreferrer"
+              className="text-blue-500 hover:text-blue-600">
+              View on Etherscan
+            </a>
+          </div>
+        )}
+      </Modal>
+    </div>
+  );
+};
+
+export default Header;
