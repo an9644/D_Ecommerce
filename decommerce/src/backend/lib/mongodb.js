@@ -1,28 +1,18 @@
 import mongoose from "mongoose";
+import dotenv from 'dotenv'
 
-const MONGODB_URI = "mongodb+srv://your_mongo_url";
+dotenv.config()
 
-if (!MONGODB_URI) {
-    throw new Error("Please define the MONGODB_URI environment variable");
-}
+const MONGODB_URI = process.env.MONGODB_URI;
 
-let cached = global.mongoose;
-if (!cached) {
-    cached = global.mongoose = { conn: null, promise: null };
-}
-
-async function connectToDatabase() {
-    if (cached.conn) return cached.conn;
-
-    if (!cached.promise) {
-        cached.promise = mongoose.connect(MONGODB_URI, {
-            useNewUrlParser: true,
-            useUnifiedTopology: true,
-        }).then((mongoose) => mongoose);
-    }
-
-    cached.conn = await cached.promise;
-    return cached.conn;
+ async function connectToDatabase() {
+      try {
+      await mongoose.connect(MONGODB_URI);
+      console.log("MongoDB Connected Successfully");
+   } catch (error) {
+      console.log("MongoDB Connection Error:", error);
+      throw error;
+   }
 }
 
 export default connectToDatabase;

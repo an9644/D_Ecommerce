@@ -45,10 +45,10 @@ describe("ACtoken and DEcommerce", function () {
       expect(await decommerce.assets(1)).to.have.property("id", 1);
       expect(await decommerce.assets(1)).to.have.property("name", "Test Asset");
       expect(await decommerce.assets(1)).to.have.property("description", "This is a test asset");
-      expect(await decommerce.assets(1)).to.have.property("imageURL", "https://example.com/image.jpg");
+      expect(await decommerce.assets(1)).to.have.property("image", "https://example.com/image.jpg");
       expect(await decommerce.assets(1)).to.have.property("price", 100);
       expect(await decommerce.assets(1)).to.have.property("owner", owner.address);
-    });
+    })
   });
 
   describe("Asset buying", function () {

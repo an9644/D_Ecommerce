@@ -1,6 +1,7 @@
-"use client"
+"use client";
+
 import React from "react";
-import Card from "./Card"; 
+import Card from "./Card";
 
 const CardGrid = ({ products }) => {
   return (

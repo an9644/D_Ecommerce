@@ -18,7 +18,7 @@ contract ACToken is ERC20, Ownable, ReentrancyGuard {
         uint256 timestamp;
     }
     
-    event AssetCreated(uint256 indexed assetId, address indexed owner);
+    event AssetCreated(uint256  assetId, address  owner, uint256 price);
     event AssetBought(uint256 indexed assetId, address indexed buyer, address indexed seller, uint256 price);
     event AssetSold(uint256 indexed assetId, address indexed seller, uint256 price);
     event TokensPurchased(address indexed buyer, uint256 amount);
@@ -45,31 +45,31 @@ contract ACToken is ERC20, Ownable, ReentrancyGuard {
     return balanceOf(account);
 }
 
+function createAsset(uint256 price) public returns (uint256) {
+    require(price > 0, "Price must be greater than zero"); 
+    assetCounter++;
+    assetOwners[assetCounter] = msg.sender;
+    assetPrices[assetCounter] = price;
 
-    function createAsset(uint256 _price) public {
-        require(_price > 0, "Price must be greater than zero");
+    emit AssetCreated(assetCounter, msg.sender, price);
+    return assetCounter;
+}
 
-        assetCounter++;
-        assetOwners[assetCounter] = msg.sender;
-        assetPrices[assetCounter] = _price;
 
-        emit AssetCreated(assetCounter, msg.sender);
-    }
-
-    function buyAsset(uint256 _assetId) public nonReentrant {
+     function buyAsset(uint256 _assetId) public nonReentrant {
         address seller = assetOwners[_assetId];
         require(seller != msg.sender, "Cannot buy your own asset");
         require(seller != address(0), "Asset does not exist");
 
         uint256 price = assetPrices[_assetId];
-        require(balanceOf(msg.sender) >= price, "Insufficient AC tokens");
+        require(balanceOf(msg.sender) >= price, "Insufficient tokens");
 
         _transfer(msg.sender, seller, price);
         assetOwners[_assetId] = msg.sender;
 
         emit AssetBought(_assetId, msg.sender, seller, price);
     }
-
+    
     function sellAsset(uint256 _assetId, uint256 _price) public {
         require(msg.sender == assetOwners[_assetId], "Only the owner can sell the asset");
         require(_price > 0, "Price must be greater than zero");

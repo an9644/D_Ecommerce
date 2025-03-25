@@ -1,49 +1,61 @@
-import connectToDatabase from "../../lib/mongodb";
-import Painting from "../../models/Painting";
-import Cors from "cors";
+import { NextResponse } from "next/server";
+import Painting from "../../../backend/models/Painting.js";
+import { contract, wallet } from "../../../backend/lib/blockchainServer.js"; 
+import { ethers } from "ethers";
+import connectToDatabase from '../../../backend/lib/mongodb.js';
 
-// Initialize middleware
-const cors = Cors({
-    origin: "*", // Change this to your frontend domain in production
-    methods: ["GET", "POST"],
-});
-
-// Run CORS before handling request
-function runMiddleware(req, res, fn) {
-    return new Promise((resolve, reject) => {
-        fn(req, res, (result) => {
-            if (result instanceof Error) {
-                return reject(result);
-            }
-            return resolve(result);
-        });
-    });
-}
-
-export default async function handler(req, res) {
-    await runMiddleware(req, res, cors);
-
+export async function POST(req) {
+  try {
     await connectToDatabase();
 
-    if (req.method === "POST") {
-        try {
-            const { title, imageUrl, price, description } = req.body;
-            const newPainting = new Painting({ title, imageUrl, price, description });
-            await newPainting.save();
-            return res.status(201).json({ message: "Painting added", painting: newPainting });
-        } catch (error) {
-            return res.status(500).json({ message: "Error adding painting", error });
-        }
+    const body = await req.json();
+    const { title, image, price, description, owner } = body; 
+
+    if (!title || !image || !price || !description || !owner) {
+      return NextResponse.json({ message: "All fields are required" }, { status: 400 });
     }
 
-    if (req.method === "GET") {
-        try {
-            const paintings = await Painting.find();
-            return res.status(200).json({ paintings });
-        } catch (error) {
-            return res.status(500).json({ message: "Error fetching paintings", error });
-        }
+    // Convert price to Wei for blockchain transaction
+    const priceInWei = ethers.utils.parseUnits(price.toString(), "ether");
+
+    // Send transaction to blockchain
+    const tx = await contract.connect(wallet).createAsset(priceInWei);
+    const receipt = await tx.wait();
+
+    // Extract assetId from blockchain logs
+    const assetId = receipt.events?.find(event => event.event === "AssetCreated")?.args?.assetId?.toString();
+
+    if (!assetId) {
+      return NextResponse.json({ message: "Failed to retrieve assetId from blockchain" }, { status: 500 });
     }
 
-    return res.status(405).json({ message: "Method not allowed" });
+    // Store asset data in MongoDB
+    const newPainting = new Painting({
+      title,
+      image,  
+      price: parseFloat(price),  
+      description,
+      assetId,
+      owner, 
+    });
+
+    await newPainting.save();
+
+    return NextResponse.json({ message: "Asset created successfully!", painting: newPainting }, { status: 201 });
+  } catch (error) {
+    console.error("Error adding asset:", error);
+    return NextResponse.json({ message: `Error: ${error.message}` }, { status: 500 });
+  } 
+}
+
+// ✅ Keep only ONE GET function
+export async function GET() {
+  try {
+    await connectToDatabase();
+    const paintings = await Painting.find({}); // Fetch all paintings from DB
+    return NextResponse.json(paintings, { status: 200 });
+  } catch (error) {
+    console.error("Error fetching paintings:", error);
+    return NextResponse.json({ message: `Error: ${error.message}` }, { status: 500 });
+  }
 }

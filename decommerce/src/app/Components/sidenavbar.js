@@ -25,7 +25,7 @@ const Sidenavbar = ({ setSelectedComponent }) => {
           const storedENS = localStorage.getItem("ensName");
           setEnsName(storedENS || null);
         } catch (error) {
-          console.error("Error restoring wallet connection:", error);
+          console.log("Error restoring wallet connection:", error);
         }
       }
     };
@@ -36,7 +36,7 @@ const Sidenavbar = ({ setSelectedComponent }) => {
   const connectWallet = async () => {
     if (typeof window.ethereum !== "undefined") {
       try {
-        const provider = new Web3Provider(window.ethereum);
+        const provider = new Web3Provider (window.ethereum);
         const accounts = await provider.send("eth_requestAccounts", []);
   
         setWalletAddress(accounts[0]);
@@ -44,7 +44,7 @@ const Sidenavbar = ({ setSelectedComponent }) => {
   
         localStorage.setItem("walletAddress", accounts[0]);
       } catch (error) {
-        console.error("Error connecting wallet:", error);
+        console.log("Error connecting wallet:", error);
       }
     } else {
       alert("MetaMask not found. Please install MetaMask.");
