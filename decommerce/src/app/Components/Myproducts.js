@@ -1,50 +1,63 @@
-"use client"
-import React, { useState } from "react";
-import CardGrid from "../Components/CardGrid"; // Import the CardGrid component
+"use client";
 
-const userProducts = [
-  {
-    name: "My Product 1",
-    description: "This is a product added by the user.",
-    price: 200,
-    image: "/images/profile.png", // Ensure the image path is correct
-    contractAddress: "0x5678...efgh",
-  },
-  {
-    name: "My Product 2",
-    description: "Another product added by the user.",
-    price: 300,
-    image: "/images/profile.png",
-    contractAddress: "0x9876...ijkl",
-  },
-];
+import React, { useEffect, useState } from "react";
+import CardGrid from "./CardGrid";
 
-const MyProducts = () => {
-  const [showMyProducts, setShowMyProducts] = useState(true);
+const Myproducts = () => {
+  const [myProducts, setMyProducts] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [walletAddress, setWalletAddress] = useState(null);
+
+  useEffect(() => {
+    // Get the logged-in user's wallet address
+    const storedWallet = localStorage.getItem("walletAddress");
+    if (storedWallet) {
+      setWalletAddress(storedWallet);
+    }
+  }, []);
+
+  useEffect(() => {
+    const fetchMyProducts = async () => {
+      try {
+        if (!walletAddress) return; // Don't fetch until walletAddress is available
+
+        console.log("Fetching products for owner:", walletAddress);
+        const response = await fetch("/api/painting");
+
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.message || "Failed to fetch products");
+        }
+
+        const data = await response.json();
+        console.log("All products:", data);
+
+        // Filter products where the owner matches the logged-in user
+        const userProducts = data.filter((product) => product.owner === walletAddress);
+        console.log("Filtered products:", userProducts);
+        setMyProducts(userProducts);
+      } catch (error) {
+        console.error("Error fetching user's products:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchMyProducts();
+  }, [walletAddress]); // Re-run when walletAddress is set
 
   return (
-    <div className="p-6 bg-gray-100 min-h-screen">
-      <div className="bg-white rounded-lg shadow-lg p-6">
-        <div className="flex justify-between items-center mb-4">
-          <h2 className="text-xl font-bold">My Products</h2>
-          <button
-            onClick={() => setShowMyProducts(!showMyProducts)}
-            className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition duration-300"
-          >
-            {showMyProducts ? "Hide My Products" : "Show My Products"}
-          </button>
-        </div>
-
-        {showMyProducts && (
-          userProducts.length > 0 ? (
-            <CardGrid products={userProducts} /> // Use the CardGrid component
-          ) : (
-            <p className="text-gray-500">No products added yet.</p>
-          )
-        )}
-      </div>
+    <div className="w-full mt-12 text-center">
+      <h2 className="text-2xl font-bold mb-4">My Products</h2>
+      {loading ? (
+        <p className="text-gray-600">Loading your products...</p>
+      ) : myProducts.length > 0 ? (
+      <CardGrid products={myProducts} hideBuyButton={true} />
+      ) : (
+        <p className="text-gray-600">You haven't added any products yet.</p>
+      )}
     </div>
   );
 };
 
-export default MyProducts;
+export default Myproducts;
