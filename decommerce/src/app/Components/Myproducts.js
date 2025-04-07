@@ -52,7 +52,9 @@ const Myproducts = () => {
       {loading ? (
         <p className="text-gray-600">Loading your products...</p>
       ) : myProducts.length > 0 ? (
-      <CardGrid products={myProducts} hideBuyButton={true} />
+      <CardGrid products={myProducts.filter(p=> p.sold === "false")} hideBuyButton={true} />
+      // <CardGrid products={products.filter(p => p.sold === "false")} />
+
       ) : (
         <p className="text-gray-600">You haven't added any products yet.</p>
       )}

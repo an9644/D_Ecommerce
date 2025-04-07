@@ -7,6 +7,7 @@ const PaintingSchema = new mongoose.Schema({
   description: { type: String, required: true },
   assetId: { type: Number, required: true },
   owner: { type: String, required: true },
-}, { timestamps: true });
+  sold:{type:String ,default:false}
+});
 
 export default mongoose.models.Painting || mongoose.model("Painting", PaintingSchema);

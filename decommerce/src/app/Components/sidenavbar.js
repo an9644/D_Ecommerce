@@ -1,7 +1,6 @@
 'use client';
 
 import React, { useState, useEffect } from "react";
-import { ethers } from "ethers";
 import profile from "../images/profile.png";
 import Image from "next/image";
 import { useRouter } from 'next/navigation'; 
@@ -12,6 +11,7 @@ import { Web3Provider } from "@ethersproject/providers";
 const Sidenavbar = ({ setSelectedComponent }) => {
   const [walletAddress, setWalletAddress] = useState(null);
   const [ensName, setEnsName] = useState(null);
+  const [userData, setUserData] = useState(null);
   const router = useRouter(); 
 
   useEffect(() => {
@@ -28,6 +28,11 @@ const Sidenavbar = ({ setSelectedComponent }) => {
           console.log("Error restoring wallet connection:", error);
         }
       }
+      const walletAddress = localStorage.getItem("walletAddress");
+      if (!walletAddress) return;
+      console.log(walletAddress);
+      setUserData(walletAddress)
+
     };
 
     restoreWalletConnection();
@@ -54,8 +59,6 @@ const Sidenavbar = ({ setSelectedComponent }) => {
   const disconnectWallet = () => {
     setWalletAddress(null);
     setEnsName(null);
-    localStorage.removeItem("walletAddress");
-    localStorage.removeItem("ensName");
   };
 
   const goToHomePage = () => {
@@ -67,9 +70,9 @@ const Sidenavbar = ({ setSelectedComponent }) => {
       <div className="bg-green-500 rounded-xl flex flex-col items-center mt-36 justify-center p-2">
         {walletAddress ? (
           <>
-            <Image src={profile} alt="Profile" width={70} height={70} className="rounded-full" />
+            <Image src={profile} alt="Profile" width={70} height={70} className="rounded-full"  unoptimized/>
             <p className="text-white mb-2">
-              {ensName ? `Welcome,` : `Welcome: ${ensName}`}<br />{`${walletAddress.slice(0, 10)}...`}
+            <br />{userData ? `Welcome: ${userData.slice(0, 10)}` : "Loading user..."}
             </p>
             <button className="bg-gray-500 text-white px-3 py-1 rounded" onClick={disconnectWallet}>
               Disconnect

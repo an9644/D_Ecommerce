@@ -30,22 +30,12 @@ const Header = () => {
   const [tokenAmount, setTokenAmount] = useState(0);
   const [totalDue, setTotalDue] = useState(0);
 
-  // useEffect(() => {
-  //   const checkAccount = async () => {
-  //     const { account } = await getProviderAndContract();
-  //     if (account) {
-  //       fetchBalance();
-  //     }
-  //   };
-  //   checkAccount();
-  //   Modal.setAppElement(document.getElementById("__next"));
-  // }, []);
-
+  
   const fetchBalance = async () => {
     try {
       const { account, contract } = await getProviderAndContract();
       if (!account || !contract) {
-        setBalance(null); // Reset balance if no account
+        setBalance(null); 
         return;
       }
   
@@ -132,7 +122,7 @@ const Header = () => {
   return (
     <div className="fixed top-0 left-0 w-full bg-gray-900 shadow-lg z-50 py-3 px-6 flex justify-between items-center">
     <div className="flex items-center gap-4">
-      <Image src={Profile} alt="Profile Image" width={70} height={70} className="rounded-full border-2 border-gray-300" />
+      <Image src={Profile} alt="Profile Image" width={70} height={70} className="rounded-full border-2 border-gray-300" unoptimized />
     </div>
   
     <div className="flex items-center bg-gradient-to-r from-purple-600 to-pink-600 px-4 py-2 rounded-full w-80 shadow-sm">

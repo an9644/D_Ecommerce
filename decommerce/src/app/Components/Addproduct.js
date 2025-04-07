@@ -5,7 +5,6 @@ import { getProviderAndContract } from "./Blockchain.js";
 import { ethers } from "ethers"; 
 const { parseEther } = ethers.utils;
 import dotenv from 'dotenv'
-
 dotenv.config();
 
 
@@ -18,6 +17,7 @@ const AddProduct = () => {
   });
   const [file, setFile] = useState(null);
   const [loading, setLoading] = useState(false);
+
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -141,6 +141,7 @@ const AddProduct = () => {
         description: paintingData.description,
         assetId,
         owner:owner,
+        sold: false
       };
 
       const response = await fetch("/api/painting", {
@@ -156,7 +157,7 @@ const AddProduct = () => {
       }
 
       alert("Art Added for Selling!");
-
+      window.location.href = '/?page=myproducts';
     } catch (error) {
       console.log("Error:", error);
       alert("Something went wrong while submitting.");

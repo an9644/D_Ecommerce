@@ -47,7 +47,9 @@ contract ACToken is ERC20, Ownable, ReentrancyGuard {
 
 function createAsset(uint256 price) public returns (uint256) {
     require(price > 0, "Price must be greater than zero"); 
-    assetCounter++;
+
+    assetCounter += 1;
+
     assetOwners[assetCounter] = msg.sender;
     assetPrices[assetCounter] = price;
 
@@ -62,7 +64,8 @@ function createAsset(uint256 price) public returns (uint256) {
         require(seller != address(0), "Asset does not exist");
 
         uint256 price = assetPrices[_assetId];
-        require(balanceOf(msg.sender) >= price, "Insufficient tokens");
+        uint256 buyerBalance = balanceOf(msg.sender);        
+        require(buyerBalance >= price, "Insufficient ACToken balance"); // Check if the buyer has enough tokens
 
         _transfer(msg.sender, seller, price);
         assetOwners[_assetId] = msg.sender;

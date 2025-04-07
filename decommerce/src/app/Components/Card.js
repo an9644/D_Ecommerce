@@ -8,6 +8,8 @@ const Card = ({ product, hideBuyButton }) => {
 
   const walletAddress = typeof window !== "undefined" ? localStorage.getItem("walletAddress") : null;
 
+  console.log("Trying to buy asset ID:", product.assetId);
+
   const handleBuy = async () => {
     if (!walletAddress) {
       alert("Wallet not connected!");
@@ -31,17 +33,41 @@ const Card = ({ product, hideBuyButton }) => {
         return;
       }
 
-      const price = ethers.BigNumber.from(String(product.price)); 
-      const balance = await contract.getBalance(account);
-
-      if (ethers.BigNumber.from(balance).lt(price)) {
-        alert("Insufficient AC tokens to buy this asset!");
+      // Fetch the user's token balance (assuming your contract has a `balanceOf` function)
+      const tokenBalance = await contract.balanceOf(walletAddress);
+      const price = ethers.BigNumber.from(String(product.price)); // Convert the price to BigNumber
+      
+      if (tokenBalance.lt(price)) {
+        alert("Insufficient tokens to buy this asset!");
         return;
       }
 
-      const tx = await contract.buyAsset(product.assetId); 
-      await tx.wait();
+      // Proceed with the transaction: Transfer the price from user to the asset owner
+      const tx = await contract.transfer(product.owner, price);  // Transfer tokens
+      const receipt = await tx.wait();
+      console.log("Transaction successful:", receipt);
+
+      // After the transaction, update the owner in the database and on the blockchain
       alert("Purchase successful!");
+
+      await fetch("/api/painting", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          assetId: product.assetId,
+          newOwner: walletAddress,
+        }),
+      });
+      await fetch("/api/transaction", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          assetId: product.assetId,
+          from: walletAddress,
+          to: product.owner,
+          price: parseFloat(product.price),
+        }),
+      });
     } catch (error) {
       console.error("Error during purchase:", error);
       alert("Transaction failed!");
@@ -55,6 +81,7 @@ const Card = ({ product, hideBuyButton }) => {
         alt={product.title}
         width={250}
         height={250}
+        unoptimized 
         className="rounded-lg border-2 border-gray-200 mx-auto"
       />
       <h2 className="text-lg font-semibold mt-2 text-purple-600 text-center">{product.title}</h2>
@@ -77,4 +104,3 @@ const Card = ({ product, hideBuyButton }) => {
 };
 
 export default Card;
-

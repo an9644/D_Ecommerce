@@ -24,12 +24,9 @@ const Page = () => {
   useEffect(() => {
     const fetchProducts = async () => {
       try {
-        console.log("Fetching products...");
         const response = await fetch("/api/painting");
-
         if (!response.ok) {
-          const errorData = await response.json();
-          throw new Error(errorData.message || "Failed to fetch products");
+          console.log("errorin Fetching Product");          
         }
 
         const data = await response.json();
@@ -90,7 +87,7 @@ const Page = () => {
             {loading ? (
               <p className="text-gray-600">Loading products...</p>
             ) : products.length > 0 ? (
-              <CardGrid products={products} />
+            <CardGrid products={products.filter(p => p.sold === "false")} />
             ) : (
               <p className="text-gray-600">No products available.</p>
             )}
