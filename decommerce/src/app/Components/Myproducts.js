@@ -9,7 +9,6 @@ const Myproducts = () => {
   const [walletAddress, setWalletAddress] = useState(null);
 
   useEffect(() => {
-    // Get the logged-in user's wallet address
     const storedWallet = localStorage.getItem("walletAddress");
     if (storedWallet) {
       setWalletAddress(storedWallet);
@@ -32,10 +31,7 @@ const Myproducts = () => {
         const data = await response.json();
         console.log("All products:", data);
 
-        // Filter products where the owner matches the logged-in user
-        const userProducts = data.filter((product) => product.owner === walletAddress);
-        console.log("Filtered products:", userProducts);
-        setMyProducts(userProducts);
+        setMyProducts(data);
       } catch (error) {
         console.error("Error fetching user's products:", error);
       } finally {
@@ -44,7 +40,7 @@ const Myproducts = () => {
     };
 
     fetchMyProducts();
-  }, [walletAddress]); // Re-run when walletAddress is set
+  }, [walletAddress]);
 
   return (
     <div className="w-full mt-12 text-center">
@@ -52,9 +48,7 @@ const Myproducts = () => {
       {loading ? (
         <p className="text-gray-600">Loading your products...</p>
       ) : myProducts.length > 0 ? (
-      <CardGrid products={myProducts.filter(p=> p.sold === "false")} hideBuyButton={true} />
-      // <CardGrid products={products.filter(p => p.sold === "false")} />
-
+      <CardGrid products={myProducts.filter(p => p.sold.toString() === "false" && p.owner.toLowerCase() === walletAddress.toLowerCase())} hideBuyButton={true} hideresell={true}/>
       ) : (
         <p className="text-gray-600">You haven't added any products yet.</p>
       )}

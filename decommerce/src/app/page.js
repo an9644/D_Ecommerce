@@ -6,7 +6,7 @@ import Sidenavbar from "./Components/sidenavbar";
 import Profile from "./Components/Profile";
 import CardGrid from "./Components/CardGrid";
 import Myproducts from "./Components/Myproducts";
-import Addproduct from "./Components/Addproduct";
+import AddProduct from "./Components/Addproduct";
 import Header from "./Components/Header";
 
 const Page = () => {
@@ -14,19 +14,14 @@ const Page = () => {
   const [selectedComponent, setSelectedComponent] = useState("Home");
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    const urlParams = new URLSearchParams(window.location.search);
-    const page = urlParams.get("page");
-    if (page) setSelectedComponent(page);
-  }, []);
+  const [resellProduct, setResellProduct] = useState(null); // Track selected product for resell
 
   useEffect(() => {
     const fetchProducts = async () => {
       try {
         const response = await fetch("/api/painting");
         if (!response.ok) {
-          console.log("errorin Fetching Product");          
+          console.log("error in Fetching Product");
         }
 
         const data = await response.json();
@@ -54,14 +49,21 @@ const Page = () => {
       case "myproducts":
         return <Myproducts />;
       case "addproducts":
-        return <Addproduct />;
-      default:
-        return (
-          <div className="text-xl font-bold text-center mt-24">
-            Welcome to Home Page
-          </div>
+        return <AddProduct />;
+      case "resell":
+        return resellProduct ? (
+          <AddProduct product={resellProduct} resellMode={true} />
+        ) : (
+          <div className="text-center mt-10 text-red-500">No product selected for resell.</div>
         );
+      default:
+        return null;
     }
+  };
+
+  const handleResellClick = (product) => {
+    setResellProduct(product);  // Set product for resell
+    setSelectedComponent("resell");  // Change to resell component
   };
 
   return (
@@ -77,7 +79,7 @@ const Page = () => {
         <Header />
 
         {/* Render Selected Component */}
-        <div className="w-full mt-20">{/* Ensure no overlap */}
+        <div className="w-full mt-20">
           {renderComponent()}
         </div>
 
@@ -87,7 +89,10 @@ const Page = () => {
             {loading ? (
               <p className="text-gray-600">Loading products...</p>
             ) : products.length > 0 ? (
-            <CardGrid products={products.filter(p => p.sold === "false")} />
+              <CardGrid
+                products={products.filter((p) => p.sold === false)}
+                onResellClick={handleResellClick} // This passes the function
+              />
             ) : (
               <p className="text-gray-600">No products available.</p>
             )}

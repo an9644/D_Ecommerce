@@ -2,16 +2,14 @@
 
 import React, { useEffect, useState } from "react";
 import CardGrid from "./CardGrid";
-import { ethers } from "ethers"; // Import ethers.js to interact with Ethereum
-import {getProviderAndContract} from './Blockchain.js'
-
-
+import { ethers } from "ethers"; 
+import { getProviderAndContract } from './Blockchain.js'
 
 const Profile = () => {
   const [address, setAddress] = useState(null);
   const [tokenBalance, setTokenBalance] = useState(0);
   const [transactionHistory, setTransactionHistory] = useState([]);
-  const [products, setProducts] = useState('');
+  const [products, setProducts] = useState([]);
   const [loading,setLoading]=useState(false)
 
  
@@ -20,9 +18,7 @@ const Profile = () => {
     if (!blockchain) return;
   
     const { account } = blockchain;
-    setAddress(account);
-    localStorage.setItem("walletAddress", account);
-  
+    setAddress(account);  
     fetchTokenBalance(account);
     fetchTransactionHistory(account);
   };
@@ -76,6 +72,7 @@ const Profile = () => {
 
   useEffect(() => {
     const handleProduct = async () => {
+      setLoading(true)
       try {
         const res = await fetch('/api/painting');
         if (res.ok) {
@@ -90,11 +87,13 @@ const Profile = () => {
         setLoading(false);
       }
     };
+    // console.log("Fetched products:", data);
   
     handleProduct(); // ✅ Call it here, outside the function definition
   }, []);
   
-
+  console.log("Filtered:", products);
+  
   return (
     <div className="p-6 bg-gray-100 min-h-screen">
       {/* User Details Section */}
@@ -113,10 +112,12 @@ const Profile = () => {
             {loading ? (
               <p className="text-gray-600">Loading products...</p>
             ) : products.length > 0 ? (
-            <CardGrid products={products.filter(p => p.sold === "true" && p.owner === address)} />
+              <CardGrid products={products.filter((p) => p.sold?.toString() === "true" && p.owner.toLowerCase() === address.toLowerCase())} hideBuyButton={true} />
+            
             ) : (
               <p className="text-gray-600">No products available.</p>
             )}
+
           </div>
       </div>
 
